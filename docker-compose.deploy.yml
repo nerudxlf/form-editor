@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  data-backend:
+    container_name: data-backend
+    build:
+      context: data/back-end/
+      dockerfile: Dockerfile
+    working_dir: /home/app/data-service
+    volumes:
+      - /home/form-editor/data/back-end:/home/app/data-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8001
+    ports: ['5001:8001']
+    environment:
+      DEBUG: 1
+    depends_on:
+      - data-frontend
+    restart: on-failure
+
+  data-frontend:
+    container_name: data-frontend
+    build:
+      context: data/front-end/
+      dockerfile: Dockerfile
+    working_dir: /home/app/front-end
+    command: npm run start
+    ports: ['5002:3000']
+
+  site-backend:
+    container_name: site-backend
+    build:
+      context: site/back-end/
+      dockerfile: Dockerfile
+    working_dir: /home/app/site-service
+    volumes:
+      - /home/form-editor/site/back-end:/home/app/site-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    ports: ['5003:8000']
+    environment:
+      DEBUG: 1
+    depends_on:
+      - data-frontend
+    restart: on-failure
+
+  site-frontend:
+    container_name: site-frontend
+    build:
+      context: site/front-end/
+      dockerfile: Dockerfile
+    working_dir: /home/app/front-end
+    command: npm run start
+    ports: ['5004:3001']
+
+  database:
+    container_name: database
+    image: mongo
+    restart: always
+    environment:
+      - mongodb=form_db
+    ports: ['5005:27017']
